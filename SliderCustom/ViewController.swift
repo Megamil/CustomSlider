@@ -18,7 +18,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        slider.themeRating(view: self.view)
+        slider.themeRating()
     }
     
     @IBAction func onChangeSlider(_ sender: Any) {

@@ -24,8 +24,8 @@ class CustomSlider: UISlider {
         return super.thumbRect(forBounds: bounds, trackRect: rect.applying(CGAffineTransform(translationX: CGFloat(xTranslation), y: 0)), value: Float(Int(value)))
     }
     
-    public func themeRating(view: UIView){
-        
+    public func themeRating(){
+        let view = self
         //Default Values
         super.minimumTrackTintColor = UIColor(named: "CustomSliderColorMinimum")
         super.maximumTrackTintColor = UIColor(named: "CustomSliderColorMaximum")
@@ -33,15 +33,15 @@ class CustomSlider: UISlider {
         super.minimumValue = 1
         super.maximumValue = 10
         
-        //Creating divisions
+        //Creating marks
         for i in 1...8 {
             
             let trackRect = self.trackRect(forBounds: self.bounds)
-            let divider = UIView(frame: CGRect(x: (CGFloat(self.frame.size.width / 10) * CGFloat(i)).rounded(), y: self.frame.size.height / 2, width: 1, height: trackRect.height))
-            divider.backgroundColor = UIColor.white
-            divider.layer.zPosition = 1
-            divider.viewWithTag(i)
-            self.insertSubview(divider, aboveSubview: self)
+            let marks = UIView(frame: CGRect(x: (CGFloat(self.frame.size.width / 10) * CGFloat(i)).rounded(), y: self.frame.size.height / 2, width: 1, height: trackRect.height))
+            marks.backgroundColor = UIColor.white
+            marks.layer.zPosition = 1
+            marks.tag = i
+            self.insertSubview(marks, aboveSubview: self)
             
         }
                 
@@ -51,8 +51,12 @@ class CustomSlider: UISlider {
         indicator.textAlignment = .center
         indicator.textColor = UIColor(named: "CustomSliderColorMinimum")
         
-        let thumb : UIImage = self.thumbImage(radius: thumbRadius)
-        setThumbImage(thumb, for: .normal)
+        //let thumb : UIImage = self.thumbImage(radius: thumbRadius)
+        
+        let ratio : CGFloat = CGFloat (1.4)
+        let thumbImage : UIImage = #imageLiteral(resourceName: "slider_thumb")
+        let size = CGSize( width: thumbImage.size.width * ratio, height: thumbImage.size.height * ratio)
+        setThumbImage(resizeImage(image: thumbImage,targetSize: size), for: .normal)
         
         //Indice
         indice = Int(super.value) - 1
@@ -61,11 +65,21 @@ class CustomSlider: UISlider {
     }
     
     public func updateLabelLocation() {
-        
+        let view = self
         let tempIndice = Int(self.value) - 1
         if tempIndice != indice {
             
             indice = tempIndice
+            //Hides mark when thumb is up (@fixme)
+            for i in 1...8 {
+                if let foundView = view.viewWithTag(i) {
+                    if(i == indice) {
+                        foundView.isHidden = true
+                    } else {
+                        foundView.isHidden = false
+                    }
+                }
+            }
             
             //Feedback
             if(indice <= 3){
@@ -120,54 +134,56 @@ class CustomSlider: UISlider {
         return CGRect(origin: point, size: CGSize(width: bounds.width, height: 15))
     }
 
-    private lazy var thumbView: UIView = {
-        
-        var thumbImageView : UIImageView = UIImageView(frame: UIScreen.main.bounds)
-        let ratio : CGFloat = CGFloat (1.4)
-        let thumbImage : UIImage = #imageLiteral(resourceName: "slider_thumb")
-        let size = CGSize( width: thumbImage.size.width * ratio, height: thumbImage.size.height * ratio)
-        thumbImageView.image = resizeImage(image: thumbImage,targetSize: size)
-        thumbImageView.clipsToBounds = true
-        thumbImageView.contentMode =  UIView.ContentMode.scaleAspectFit
-
-        let thumb = UIView()
-        thumb.addSubview(thumbImageView)
-        thumb.layer.borderWidth = 0.4
-        thumb.layer.zPosition = 5
-        
-        return thumb
-    }()
-
-    private func thumbImage(radius: CGFloat) -> UIImage {
-        // Set proper frame
-        // y: radius / 2 will correctly offset the thumb
-
-        thumbView.frame = CGRect(x: 0, y: radius / 2, width: radius, height: radius)
-        thumbView.layer.cornerRadius = radius / 2
-        
-        let width: CGFloat = 200
-        let height: CGFloat = 200
-        let shadowWidth: CGFloat = 1.4
-        let shadowHeight: CGFloat = 5
-        let shadowOffsetX: CGFloat = -1500
-        let shadowRadius: CGFloat = 25
-
-        let shadowPath = UIBezierPath()
-        shadowPath.move(to: CGPoint(x: shadowRadius / 2, y: height - shadowRadius / 2))
-        shadowPath.addLine(to: CGPoint(x: width, y: height - shadowRadius / 2))
-        shadowPath.addLine(to: CGPoint(x: width * shadowWidth + shadowOffsetX, y: height + (height * shadowHeight)))
-        shadowPath.addLine(to: CGPoint(x: width * -(shadowWidth - 1) + shadowOffsetX, y: height + (height * shadowHeight)))
-
-        thumbView.layer.shadowOpacity = 1
-        thumbView.layer.shadowPath = shadowPath.cgPath
-
-        // Convert thumbView to UIImage
-        // See this: https://stackoverflow.com/a/41288197/7235585
-
-        let renderer = UIGraphicsImageRenderer(bounds: thumbView.bounds)
-        return renderer.image { rendererContext in
-            thumbView.layer.render(in: rendererContext.cgContext)
-        }
-    }
+//BETA Shadow
+    
+//    private lazy var thumbView: UIView = {
+//
+//        var thumbImageView : UIImageView = UIImageView(frame: UIScreen.main.bounds)
+//        let ratio : CGFloat = CGFloat (1.4)
+//        let thumbImage : UIImage = #imageLiteral(resourceName: "slider_thumb")
+//        let size = CGSize( width: thumbImage.size.width * ratio, height: thumbImage.size.height * ratio)
+//        thumbImageView.image = resizeImage(image: thumbImage,targetSize: size)
+//        thumbImageView.clipsToBounds = true
+//        thumbImageView.contentMode =  UIView.ContentMode.scaleAspectFit
+//
+//        let thumb = UIView()
+//        thumb.addSubview(thumbImageView)
+//        thumb.layer.borderWidth = 0.4
+//        thumb.layer.zPosition = 5
+//
+//        return thumb
+//    }()
+    
+//    private func thumbImage(radius: CGFloat) -> UIImage {
+//        // Set proper frame
+//        // y: radius / 2 will correctly offset the thumb
+//
+//        thumbView.frame = CGRect(x: 0, y: radius / 2, width: radius, height: radius)
+//        thumbView.layer.cornerRadius = radius / 2
+//
+//        let width: CGFloat = 200
+//        let height: CGFloat = 200
+//        let shadowWidth: CGFloat = 1.4
+//        let shadowHeight: CGFloat = 5
+//        let shadowOffsetX: CGFloat = -1500
+//        let shadowRadius: CGFloat = 25
+//
+//        let shadowPath = UIBezierPath()
+//        shadowPath.move(to: CGPoint(x: shadowRadius / 2, y: height - shadowRadius / 2))
+//        shadowPath.addLine(to: CGPoint(x: width, y: height - shadowRadius / 2))
+//        shadowPath.addLine(to: CGPoint(x: width * shadowWidth + shadowOffsetX, y: height + (height * shadowHeight)))
+//        shadowPath.addLine(to: CGPoint(x: width * -(shadowWidth - 1) + shadowOffsetX, y: height + (height * shadowHeight)))
+//
+//        thumbView.layer.shadowOpacity = 1
+//        thumbView.layer.shadowPath = shadowPath.cgPath
+//
+//        // Convert thumbView to UIImage
+//        // See this: https://stackoverflow.com/a/41288197/7235585
+//
+//        let renderer = UIGraphicsImageRenderer(bounds: thumbView.bounds)
+//        return renderer.image { rendererContext in
+//            thumbView.layer.render(in: rendererContext.cgContext)
+//        }
+//  }
     
 }
