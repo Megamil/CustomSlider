@@ -14,8 +14,8 @@ class CustomSlider: UISlider {
     public var indicator : UILabel!
     public var indice : Int!
     private let trackHeight: CGFloat = 10
-    private let thumbWidth: Float = 20
-    private let thumbRadius: CGFloat = 35
+    private let thumbWidth: Float = 25
+    private let thumbRadius: CGFloat = 10
     private lazy var startingOffset: Float = 0 - (thumbWidth / 2)
     private lazy var endingOffset: Float = thumbWidth
     
@@ -27,17 +27,29 @@ class CustomSlider: UISlider {
     public func themeRating(){
         let view = self
         //Default Values
-        super.minimumTrackTintColor = UIColor(named: "CustomSliderColorMinimum")
-        super.maximumTrackTintColor = UIColor(named: "CustomSliderColorMaximum")
+        if #available(iOS 11.0, *) {
+            super.minimumTrackTintColor = UIColor(named: "CustomSliderColorMinimum")
+        } else {
+            // Fallback on earlier versions
+        }
+        if #available(iOS 11.0, *) {
+            super.maximumTrackTintColor = UIColor(named: "CustomSliderColorMaximum")
+        } else {
+            // Fallback on earlier versions
+        }
         super.value = 10
         super.minimumValue = 1
         super.maximumValue = 10
         
+        let trackRect = self.trackRect(forBounds: self.bounds)
+        let thumbRect = self.thumbRect(forBounds: self.bounds, trackRect: trackRect, value: Float(Int(self.value)))
+        
+        print("trackRect -> width \(self.layer.bounds.width)")
+        
         //Creating marks
         for i in 1...8 {
             
-            let trackRect = self.trackRect(forBounds: self.bounds)
-            let marks = UIView(frame: CGRect(x: (CGFloat(self.frame.size.width / 10) * CGFloat(i)).rounded(), y: self.frame.size.height / 2, width: 1, height: trackRect.height))
+            let marks = UIView(frame: CGRect(x: (CGFloat(self.layer.bounds.width / 9) * CGFloat(i)).rounded(), y: trackRect.height, width: 1, height: trackRect.height))
             marks.backgroundColor = UIColor.white
             marks.layer.zPosition = 1
             marks.tag = i
@@ -46,18 +58,22 @@ class CustomSlider: UISlider {
         }
                 
         //Indicator
-        indicator = UILabel(frame: CGRect(x: 0, y: 0, width: 25, height: 20))
+        indicator = UILabel(frame: CGRect(x: 0, y: 0, width: thumbRect.width, height: 20))
         indicator.font = UIFont.boldSystemFont(ofSize: 19.0)
         indicator.textAlignment = .center
-        indicator.textColor = UIColor(named: "CustomSliderColorMinimum")
+        if #available(iOS 11.0, *) {
+            indicator.textColor = UIColor(named: "CustomSliderColorMinimum")
+        } else {
+            // Fallback on earlier versions
+        }
         
         //let thumb : UIImage = self.thumbImage(radius: thumbRadius)
         
-        let ratio : CGFloat = CGFloat (1.4)
+//      let ratio : CGFloat = CGFloat (0.8)
         let thumbImage : UIImage = #imageLiteral(resourceName: "slider_thumb")
-        let size = CGSize( width: thumbImage.size.width * ratio, height: thumbImage.size.height * ratio)
-        setThumbImage(resizeImage(image: thumbImage,targetSize: size), for: .normal)
-        
+//      let size = CGSize( width: thumbImage.size.width * ratio, height: thumbImage.size.height * ratio)
+//      setThumbImage(resizeImage(image: thumbImage,targetSize: size), for: .normal)
+        setThumbImage(thumbImage, for: .normal)
         //Indice
         indice = Int(super.value) - 1
         
@@ -65,14 +81,14 @@ class CustomSlider: UISlider {
     }
     
     public func updateLabelLocation() {
-        let view = self
+        //let view = self.trackRect(forBounds: self.bounds)
         let tempIndice = Int(self.value) - 1
         if tempIndice != indice {
             
             indice = tempIndice
             //Hides mark when thumb is up (@fixme)
             for i in 1...8 {
-                if let foundView = view.viewWithTag(i) {
+                if let foundView = self.viewWithTag(i) {
                     if(i == indice) {
                         foundView.isHidden = true
                     } else {
@@ -83,20 +99,32 @@ class CustomSlider: UISlider {
             
             //Feedback
             if(indice <= 3){
-                let impact = UIImpactFeedbackGenerator(style: .light)
-                impact.impactOccurred()
+                if #available(iOS 10.0, *) {
+                    let impact = UIImpactFeedbackGenerator(style: .light)
+                    impact.impactOccurred()
+                } else {
+                    // Fallback on earlier versions
+                }
             } else if (indice >= 7) {
-                let impact = UIImpactFeedbackGenerator(style: .heavy)
-                impact.impactOccurred()
+                if #available(iOS 10.0, *) {
+                    let impact = UIImpactFeedbackGenerator(style: .heavy)
+                    impact.impactOccurred()
+                } else {
+                    // Fallback on earlier versions
+                }
             } else {
-                let impact = UIImpactFeedbackGenerator(style: .medium)
-                impact.impactOccurred()
+                if #available(iOS 10.0, *) {
+                    let impact = UIImpactFeedbackGenerator(style: .medium)
+                    impact.impactOccurred()
+                } else {
+                    // Fallback on earlier versions
+                }
             }
             
             let trackRect = self.trackRect(forBounds: self.bounds)
             let thumbRect = self.thumbRect(forBounds: self.bounds, trackRect: trackRect, value: Float(Int(self.value)))
-            let y = self.frame.origin.y - 13
-            let x = (thumbRect.origin.x + self.frame.origin.x + (thumbRect.width / 2))
+            let y = thumbRect.origin.y - 10
+            let x = thumbRect.origin.x + (thumbRect.width / 2).rounded()
             self.indicator.center = CGPoint(x: x, y: y)
             self.indicator.text = String(indice+1)
         }
